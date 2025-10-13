@@ -2,7 +2,7 @@
 
 This code extracts only the classes necessary for emulating the OPN2 from [ymfm](https://github.com/aaronsgiles/ymfm/tree/17decfae857b92ab55fbb30ade2287ace095a381), and modifies it into a single-header format while including its dependency code.
 
-Please note that the ymfm implementation provided in this repository (ymfm_opn2.hpp) has been modified to avoid using the C++ STL. This modification was made to support building on a Raspberry Pi bare-metal environment using the Circle framework. This modification was automatically performed by OpenAI's Codex (GPT-5).
+Please note that the ymfm implementation provided in this repository [(ymfm_opn2.hpp](./ymfm_opn2.hpp)) has been modified to avoid using the C++ STL. This modification was made to support building on a Raspberry Pi bare-metal environment using the [Circle](https://github.com/rsta2/circle) framework. This modification was automatically performed by OpenAI's Codex (GPT-5).
 
 ## How to use
 
