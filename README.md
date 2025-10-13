@@ -1,16 +1,20 @@
-# Extract an OPN2 from ymfm
+# Extracting OPN2 from ymfm
 
-This code extracts only the classes necessary for emulating the OPN2 from [ymfm](https://github.com/aaronsgiles/ymfm/tree/17decfae857b92ab55fbb30ade2287ace095a381), and modifies it into a single-header format while including its dependency code.
+This repository extracts only the classes required to emulate the OPN2 (YM2612) chip from [ymfm](https://github.com/aaronsgiles/ymfm/tree/17decfae857b92ab55fbb30ade2287ace095a381), and refactors them into a single-header format with all necessary dependencies included.
 
-Please note that the ymfm implementation provided in this repository [(ymfm_opn2.hpp](./ymfm_opn2.hpp)) has been modified to avoid using the C++ STL. This modification was made to support building on a Raspberry Pi bare-metal environment using the [Circle](https://github.com/rsta2/circle) framework. This modification was automatically performed by OpenAI's Codex (GPT-5).
+Please note that the provided implementation, [`ymfm_opn2.hpp`](./ymfm_opn2.hpp), has been modified to remove all dependencies on the C++ STL.  
+This change enables compatibility with bare-metal builds on the Raspberry Pi using the [Circle](https://github.com/rsta2/circle) framework.  
+The STL removal and refactoring were automatically performed using OpenAI’s Codex (GPT-5).
 
-## How to use
+---
 
-Check the [example.cpp](./example.cpp).
+## How to Use
 
-### 1. `#include`
+See [`example.cpp`](./example.cpp) for a working example.
 
-In [example.cpp](./example.cpp), include [vgmdrv.hpp](./vgmdrv.hpp) with `#include`,
+### 1. Include the header
+
+In your source file (e.g., `example.cpp`), include [`vgmdrv.hpp`](./vgmdrv.hpp):
 
 ```c++
 #include "vgmdrv.hpp"
@@ -18,7 +22,7 @@ In [example.cpp](./example.cpp), include [vgmdrv.hpp](./vgmdrv.hpp) with `#inclu
 
 ### 2. Create an instance
 
-After creating an instance of the `VgmDriver` class by specifying the sampling rate (typically 44100) and the number of channels (1: Mono, 2: Stereo),
+Create an instance of the `VgmDriver` class, specifying the sampling rate (typically 44100 Hz) and number of channels (1 = Mono, 2 = Stereo):
 
 ```c++
 const int sampling_rate = 44100;
@@ -28,7 +32,7 @@ VgmDriver vgmdrv(sampling_rate, channels);
 
 ### 3. Load a `.vgm` file
 
-The `VgmDriver::load` method reads the .vgm file,
+Use the `VgmDriver::load` method to read a `.vgm` file:
 
 ```c++
 if (!vgmdrv.load(buf.data(), buf.size())) {
@@ -37,13 +41,13 @@ if (!vgmdrv.load(buf.data(), buf.size())) {
 }
 ```
 
-### 4. Render the samplies
+### 4. Render the samples
 
-The `VgmDriver::render` method continues to acquire sample data in chunks of 4096 samples until it detects the end of the music data or a loop.
+Use the `VgmDriver::render` method to continuously obtain sample data in chunks of 4096 samples until the end of the track or a loop is detected:
 
 ```c++
 std::vector<int16_t> wav;
-while (0 == vgmdrv.getLoopCount() && !vgmdrv.isEnded()) {
+while (vgmdrv.getLoopCount() == 0 && !vgmdrv.isEnded()) {
     int16_t work[4096];
     vgmdrv.render(work, sizeof(work) / 2);
     wav.reserve(wav.size() + sizeof(work) / 2);
@@ -52,13 +56,14 @@ while (0 == vgmdrv.getLoopCount() && !vgmdrv.isEnded()) {
 printf("%zu samples generated.\n", wav.size());
 ```
 
-> This [example.cpp](./example.cpp) outputs the sampling results simply as a .wav file to eliminate OS dependencies.
->
-> In the typical C++ games or SDKs, the implementation involves outputting the sampled data obtained in the `VgmDriver::render` method using SDL2 audio callbacks, DirectSound, or similar methods.
+> The example writes the rendered samples to a `.wav` file to avoid OS-specific audio dependencies.  
+> In a typical game or SDK, you would instead feed the rendered data to an audio API such as SDL2 or DirectSound.
 
-## How to test
+---
 
-You can build and run the application by executing the following command.
+## How to Test
+
+You can build and run the example with the following commands:
 
 ```bash
 git clone https://github.com/suzukiplan/ymfm_opn2
@@ -66,7 +71,7 @@ cd ymfm_opn2
 make
 ```
 
-When executed, it reads test.vgm from this repository and outputs a .wav file.
+When executed, the program reads `test.vgm` included in this repository and outputs a `.wav` file:
 
 ```text
 g++ -O2 -o example example.cpp
@@ -76,23 +81,36 @@ Detected YM2612: clocks=7670454Hz <supported>
 Writing a wav file...
 ```
 
-Using the `afplay` command or similar tools to play `test.wav` will confirm that the same music as in the video below plays:
+You can play the generated `test.wav` using a command such as `afplay` to verify that it matches the music heard in the following video:
 
 https://www.youtube.com/watch?v=1FBO5BiD1Fg
 
-> The above video is a capture of [test.fur](./test.fur) played in [Furnace Tracker](https://github.com/tildearrow/furnace).
+> The video shows [`test.fur`](./test.fur) played in [Furnace Tracker](https://github.com/tildearrow/furnace).
 
-## How to integrate to your Project
+---
 
-Add [vgmdrv.hpp](./vgmdrv.hpp) and [ymfm_opn2.hpp](./ymfm_opn2.hpp) to your project and include them with `#include “vgmdrv.hpp”`.
+## Integrating into Your Project
 
-Since there is no code (.c or .cpp) that depends on anything other than the header files, it should be easy to integrate!
+Simply add [`vgmdrv.hpp`](./vgmdrv.hpp) and [`ymfm_opn2.hpp`](./ymfm_opn2.hpp) to your project and include them as:
 
-## Restrictions
+```c++
+#include "vgmdrv.hpp"
+```
 
-- The VGM commands implemented by vgmdrv are minimal. If your created VGM causes an error with `“Detected an unknown VGM command: xx”`, you must add the necessary commands.
-- We haven't verified this yet, but the DAC for channel 6 likely isn't currently supported.
+Since the implementation is entirely header-only, integration should be straightforward.
+
+---
+
+## Limitations
+
+- The VGM command set implemented in `vgmdrv` is minimal.  
+  If your `.vgm` file produces an error like  
+  `"Detected an unknown VGM command: xx"`,  
+  you’ll need to add support for the missing command.
+- Although not yet verified, the DAC for channel 6 is likely unsupported.
+
+---
 
 ## License
 
-[3-Clause BSD](./LICENSE)
+[BSD 3-Clause License](./LICENSE)
