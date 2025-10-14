@@ -76,7 +76,7 @@ make
 When executed, the program reads `test.vgm` included in this repository and outputs a `.wav` file:
 
 ```text
-g++ -O2 -o example example.cpp
+g++ -std=c++17 -O2 -o example example.cpp
 ./example test.vgm test.wav
 Detected YM2612: clocks=7670454Hz <supported>
 3481600 samples generated.
