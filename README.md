@@ -41,7 +41,7 @@ if (!vgmdrv.load(buf.data(), buf.size())) {
 }
 ```
 
-> Calling `VgmDriver::load` again will switch playback to a different VGM file.
+> Calling `VgmDriver::load` again will switch playback to a different `.vgm` file.
 
 ### 4. Render the samples
 
