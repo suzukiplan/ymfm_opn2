@@ -41,6 +41,8 @@ if (!vgmdrv.load(buf.data(), buf.size())) {
 }
 ```
 
+> Calling `VgmDriver::load` again will switch playback to a different VGM file.
+
 ### 4. Render the samples
 
 Use the `VgmDriver::render` method to continuously obtain sample data in chunks of 4096 samples until the end of the track or a loop is detected:
