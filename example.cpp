@@ -8,10 +8,10 @@
 #include <vector>
 #include "vgmdrv.hpp"
 
-namespace
+namespace wav
 {
 
-struct WavHeader {
+struct Header {
     std::array<char, 4> riff{'R', 'I', 'F', 'F'};
     std::uint32_t file_size{};
     std::array<char, 4> wave{'W', 'A', 'V', 'E'};
@@ -27,22 +27,22 @@ struct WavHeader {
     std::uint32_t data_size{};
 };
 
-auto load_file(const std::filesystem::path& path)
+auto load(const std::filesystem::path& path)
 {
     std::ifstream file(path, std::ios::binary);
     if (!file) throw std::runtime_error("failed to open " + path.string());
     return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(file), {});
 }
 
-void write_wav(const std::filesystem::path& path, const std::vector<std::int16_t>& samples, int channels, int sample_rate)
+void write(const std::filesystem::path& path, const std::vector<std::int16_t>& samples, int channels, int sample_rate)
 {
-    WavHeader header{};
+    Header header{};
     header.channels = static_cast<std::uint16_t>(channels);
     header.sample_rate = static_cast<std::uint32_t>(sample_rate);
     header.block_align = static_cast<std::uint16_t>(channels * sizeof(std::int16_t));
     header.byte_rate = header.sample_rate * header.block_align;
     header.data_size = static_cast<std::uint32_t>(samples.size() * sizeof(std::int16_t));
-    header.file_size = header.data_size + sizeof(WavHeader) - 8;
+    header.file_size = header.data_size + sizeof(Header) - 8;
 
     std::ofstream out(path, std::ios::binary);
     if (!out) throw std::runtime_error("failed to open " + path.string());
@@ -51,7 +51,7 @@ void write_wav(const std::filesystem::path& path, const std::vector<std::int16_t
     if (!out) throw std::runtime_error("failed to write wav data");
 }
 
-} // namespace
+} // namespace wav
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
         const std::filesystem::path input{argv[1]};
         const std::filesystem::path output{argv[2]};
 
-        const auto data = load_file(input);
+        const auto data = wav::load(input);
 
         constexpr int sampling_rate = 44100;
         constexpr int channels = 1;
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
         std::cout << audio.size() << " samples generated.\n";
         std::cout << "Writing " << output << "...\n";
-        write_wav(output, audio, channels, sampling_rate);
+        wav::write(output, audio, channels, sampling_rate);
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
